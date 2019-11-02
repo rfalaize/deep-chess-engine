@@ -9,4 +9,4 @@ Keras==2.2.4
 python-chess==0.25.0
 tensorboard==1.12.2
 #torch==1.0.1
-Werkzeug==0.14.1
+Werkzeug==0.15.3
