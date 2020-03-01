@@ -6,6 +6,7 @@ from flask_restplus import Api, Resource, fields, abort
 import engines
 import argparse
 import threading
+from threading import RLock
 import uuid
 
 # configure logger
@@ -43,6 +44,7 @@ chessEngineResponse = api.model('ChessEngineResponse', {
 # global variables
 moves_store = {}
 moves_count = 0
+lock = RLock()
 
 # create routes
 @ns.route('/health-check', methods=['GET'])
@@ -62,17 +64,27 @@ class ChessEngine(Resource):
             req = api.payload
             log.info('New move generation request received: ' + str(req))
 
+
             # generate a new move id
             global moves_count
             global moves_store
-            moves_count += 1
+            global lock
+            lock.acquire()
+            try:
+                moves_count += 1
+            finally:
+                lock.release()
             move_id = 'move_id_' + str(moves_count) + '_' + str(uuid.uuid1())
 
             # create a thread
             worker_thread = threading.Thread(target=generate_move, args=(move_id, req['engine'], req['fen']))
 
             # store thread and id
-            moves_store[move_id] = {'worker_thread': worker_thread, 'status': 'WORKING', 'result': ''}
+            lock.acquire()
+            try:
+                moves_store[move_id] = {'worker_thread': worker_thread, 'status': 'WORKING', 'result': ''}
+            finally:
+                lock.release()
 
             # start worker
             worker_thread.start()
@@ -132,10 +144,14 @@ def generate_move(move_id, engine_name, fen):
         engine = engines.mcts.v1.engine.Engine()
 
     global moves_store
+    global lock
     result = engine.generate_move(fen)
-    moves_store[move_id]['result'] = result
-    moves_store[move_id]['status'] = 'DONE'
-
+    lock.acquire()
+    try:
+        moves_store[move_id]['result'] = result
+        moves_store[move_id]['status'] = 'DONE'
+    finally:
+        lock.release()
     log.info('generate_move ' + move_id + 'finished:' + str(moves_store[move_id]['result']))
     log.info('moves_store contains ' + str(moves_store))
     return
