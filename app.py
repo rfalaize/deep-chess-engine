@@ -41,10 +41,7 @@ chessEngineResponse = api.model('ChessEngineResponse', {
 })
 
 
-# global variables
-moves_store = {}
-moves_count = 0
-lock = RLock()
+
 
 # create routes
 @ns.route('/health-check', methods=['GET'])
@@ -63,7 +60,6 @@ class ChessEngine(Resource):
         try:
             req = api.payload
             log.info('New move generation request received: ' + str(req))
-
 
             # generate a new move id
             global moves_count
@@ -168,6 +164,11 @@ if __name__ == '__main__':
     parser.add_argument('--port', help='Port number', type= int, default= 0)
     args = parser.parse_args()
     log.info('Command line arguments: {}'.format(args))
+
+    # global variables
+    moves_store = {}
+    moves_count = 0
+    lock = RLock()
 
     log.info("Starting application on port {}...".format(args.port))
     app.run(host='0.0.0.0', port=args.port, debug=(args.env == 'DEV'))
