@@ -104,15 +104,12 @@ class InspectMovesStore(Resource):
 @ns.route('/engine/poll_move/<string:move_id>', methods=['GET'])
 class PollMove(Resource):
     def get(self, move_id):
-        log.info("polling move_id=" + move_id + "...")
         global moves_store
+        log.info("polling move_id=" + move_id + "... moves_store is " + str(moves_store))
         if move_id not in moves_store:
             log.warning("move " + move_id + " not found")
             return {'status': 'NOT FOUND'}
         result = {k: moves_store[move_id][k] for k in ('status', 'result')}
-        if result['status'] == 'DONE':
-            del moves_store[move_id]    # remove from cache once polled
-            log.info("move " + move_id + " removed from the store")
         log.info('move status:', result)
         return result
 
@@ -135,11 +132,13 @@ def generate_move(move_id, engine_name, fen):
         engine = engines.mcts.v1.engine.Engine()
 
     global moves_store
-    moves_store[move_id]['result'] = engine.generate_move(fen)
+    result = engine.generate_move(fen)
+    moves_store[move_id]['result'] = result
     moves_store[move_id]['status'] = 'DONE'
 
-    log.info('generate_move finished:' + str(moves_store[move_id]['result']))
-    return moves_store[move_id]['result']
+    log.info('generate_move ' + move_id + 'finished:' + str(moves_store[move_id]['result']))
+    log.info('moves_store contains ' + str(moves_store))
+    return
 
 
 if __name__ == '__main__':
