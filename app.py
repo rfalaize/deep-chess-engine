@@ -40,8 +40,9 @@ chessEngineResponse = api.model('ChessEngineResponse', {
 })
 
 
+# global variables
 moves_store = {}
-
+moves_count = 0
 
 # create routes
 @ns.route('/health-check', methods=['GET'])
@@ -62,7 +63,10 @@ class ChessEngine(Resource):
             log.info('New move generation request received: ' + str(req))
 
             # generate a new move id
-            move_id = 'move_id_' + str(len(moves_store)+1) + '_' + str(uuid.uuid1())
+            global moves_count
+            global moves_store
+            moves_count += 1
+            move_id = 'move_id_' + str(moves_count) + '_' + str(uuid.uuid1())
 
             # create a thread
             worker_thread = threading.Thread(target=generate_move, args=(move_id, req['engine'], req['fen']))
@@ -100,12 +104,16 @@ class InspectMovesStore(Resource):
 @ns.route('/engine/poll_move/<string:move_id>', methods=['GET'])
 class PollMove(Resource):
     def get(self, move_id):
-        log.info("Polling move_id=" + move_id + "...")
+        log.info("polling move_id=" + move_id + "...")
+        global moves_store
         if move_id not in moves_store:
-            abort(400, "move id not found")
+            log.warning("move " + move_id + " not found")
+            return {'status': 'NOT FOUND'}
         result = {k: moves_store[move_id][k] for k in ('status', 'result')}
         if result['status'] == 'DONE':
             del moves_store[move_id]    # remove from cache once polled
+            log.info("move " + move_id + " removed from the store")
+        log.info('move status:', result)
         return result
 
 
@@ -126,6 +134,7 @@ def generate_move(move_id, engine_name, fen):
     elif engine_name.upper() == 'MCTS.V1':
         engine = engines.mcts.v1.engine.Engine()
 
+    global moves_store
     moves_store[move_id]['result'] = engine.generate_move(fen)
     moves_store[move_id]['status'] = 'DONE'
 
