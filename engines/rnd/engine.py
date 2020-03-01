@@ -1,9 +1,10 @@
-'''
+"""
 Random engine
-'''
+"""
 
 from ..core import CoreEngine
 import random
+
 
 class Engine(CoreEngine):
 
@@ -11,17 +12,9 @@ class Engine(CoreEngine):
         CoreEngine.__init__(self, 'random')
         return
 
-    def Copy(self):
-        return Engine()
-
-    def Step(self):
+    def step(self):
         # function to be implemented by children
         move = random.choice(list(self.board.legal_moves))
         self.board.push(move)
         return move, self.board, {}
 
-
-# request handler
-def handleRequest(context):
-    engine = Engine()
-    return engine.HandlePostRequest(context)

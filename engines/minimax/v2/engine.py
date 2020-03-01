@@ -1,5 +1,6 @@
 from ...core import CoreEngine
 
+
 class Engine(CoreEngine):
 
     def __init__(self):
@@ -75,22 +76,22 @@ class Engine(CoreEngine):
              -30, -40, -40, -50, -50, -40, -40, -30]
 
         # mirror score tables for black
-        self.SCORES['B']['PAWN'] = self.MirrorScore(self.SCORES['W']['PAWN'])
-        self.SCORES['B']['KNIGHT'] = self.MirrorScore(self.SCORES['W']['KNIGHT'])
-        self.SCORES['B']['BISHOP'] = self.MirrorScore(self.SCORES['W']['BISHOP'])
-        self.SCORES['B']['ROOK'] = self.MirrorScore(self.SCORES['W']['ROOK'])
-        self.SCORES['B']['QUEEN'] = self.MirrorScore(self.SCORES['W']['QUEEN'])
-        self.SCORES['B']['KING'] = self.MirrorScore(self.SCORES['W']['KING'])
+        self.SCORES['B']['PAWN'] = self.mirror_score(self.SCORES['W']['PAWN'])
+        self.SCORES['B']['KNIGHT'] = self.mirror_score(self.SCORES['W']['KNIGHT'])
+        self.SCORES['B']['BISHOP'] = self.mirror_score(self.SCORES['W']['BISHOP'])
+        self.SCORES['B']['ROOK'] = self.mirror_score(self.SCORES['W']['ROOK'])
+        self.SCORES['B']['QUEEN'] = self.mirror_score(self.SCORES['W']['QUEEN'])
+        self.SCORES['B']['KING'] = self.mirror_score(self.SCORES['W']['KING'])
 
         # variable to monitor training
         self.nodes_count = 0
         self.nodes_evaluated = 0
         return
 
-    def Step(self):
+    def step(self):
         # function to be implemented by children
         self.nodes_count = 0
-        score, move = self.Minimax(self.board, depth=0, max_depth=4,
+        score, move = self.minimax(self.board, depth=0, max_depth=4,
                                           alpha=-9999, beta=9999,
                                           isMaximizer=self.board.turn)
         stats = {}
@@ -101,7 +102,7 @@ class Engine(CoreEngine):
         self.board.push(move)
         return move, self.board, stats
 
-    def Evaluate(self, board):
+    def evaluate(self, board):
         # evaluation function
         if board.is_checkmate():
             if board.turn:
@@ -141,6 +142,8 @@ class Engine(CoreEngine):
                 piece_score = 900 + queen_score[square]
             elif piece.piece_type == 6:
                 piece_score = 2000 + king_score[square]
+            else:
+                piece_score = 0
 
             if piece.color:
                 # white
@@ -151,13 +154,13 @@ class Engine(CoreEngine):
 
         return score
 
-    def Minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True):
+    def minimax(self, board, depth=0, max_depth=1, alpha=-1000000, beta=1000000, isMaximizer=True):
         self.nodes_count += 1
 
         # when reaching a leaf node, return its evaluation
         if (depth >= max_depth) or (board.is_game_over()):
             self.nodes_evaluated += 1
-            return self.Evaluate(board), None
+            return self.evaluate(board), None
 
         # evaluate next moves up to a certain depth
         best_move = None
@@ -167,7 +170,7 @@ class Engine(CoreEngine):
             best_score = (-1)*self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, False)
+                score, _ = self.minimax(board, depth+1, max_depth, alpha, beta, False)
                 board.pop()
                 if score > best_score:
                     best_score = score
@@ -178,13 +181,13 @@ class Engine(CoreEngine):
                         # no need to continue as the minimizer will pick the lower value (beta)
                         # somewhere else in the tree, so this branch will be discarded.
                         # print('maximizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
-                        break;
+                        break
         else:
             # player is minimizer
             best_score = self.MAX_SCORE
             for move in board.legal_moves:
                 board.push(move)
-                score, _ = self.Minimax(board, depth+1, max_depth, alpha, beta, True)
+                score, _ = self.minimax(board, depth+1, max_depth, alpha, beta, True)
                 board.pop()
                 if score < best_score:
                     best_score = score
@@ -194,11 +197,11 @@ class Engine(CoreEngine):
                     if alpha >= beta:
                         # no need to continue as maximizer will pick the higher value (alpha) somewhere else in the tree
                         # print('minimizer pruned node at depth {}: alpha ({}) >= beta ({})'.format(depth, alpha, beta))
-                        break;
+                        break
 
         return best_score, best_move
 
-    def MirrorScore(self, scores):
+    def mirror_score(self, scores):
         return scores[56:64] \
                + scores[48:56] \
                + scores[40:48] \
@@ -207,11 +210,3 @@ class Engine(CoreEngine):
                + scores[16:24] \
                + scores[8:16] \
                + scores[0:8]
-
-    def Copy(self):
-        return Engine()
-
-# request handler
-def handleRequest(context):
-    engine = Engine()
-    return engine.HandlePostRequest(context)
