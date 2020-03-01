@@ -1,20 +1,24 @@
-# deep-chess-engine
+# Deep Chess Engine
 
-AI engine, rest API.
+Rest API for chess AI engine.
 
-### links
+## Links
 
 -   heroku app: https://guarded-cove-12311.herokuapp.com/
 -   heroku branch: https://git.heroku.com/guarded-cove-12311.git
 
-### tips
+## Tips
+
+Heroku settings are defined in ./Procfile
 
 Publish local changes:
 
--   git add .
--   git commit -m "commit msg"
--   git push heroku master
+<code>
+git add .</br>
+git commit -m "commit msg"</br>
+git push heroku master</br>
+</code>
 
 Check logs:
 
--   heroku logs --tail
+<code>heroku logs --tail</code>
