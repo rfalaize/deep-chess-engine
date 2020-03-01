@@ -5,6 +5,7 @@ import datetime
 import random
 import operator
 
+
 # ********************************************************************
 # Node of the game tree
 # ********************************************************************
@@ -67,7 +68,7 @@ class Engine(CoreEngine):
 
         return
 
-    def Step(self):
+    def step(self):
         # function to be implemented by children
         root_node = Node(self.board)
         # fix seed to reproduce results
@@ -195,8 +196,6 @@ class Engine(CoreEngine):
         print("next move", next_move)
         return next_move, self.stats
 
-    def Copy(self):
-        return Engine()
 
 # ********************************************************************
 # Policy
@@ -462,9 +461,3 @@ class Policies:
                 next_node = descendant
 
         return next_node
-
-
-# request handler
-def handleRequest(context):
-    engine = Engine()
-    return engine.HandlePostRequest(context)

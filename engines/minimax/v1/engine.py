@@ -1,5 +1,6 @@
 from ...core import CoreEngine
 
+
 class Engine(CoreEngine):
 
     def __init__(self):
@@ -74,25 +75,24 @@ class Engine(CoreEngine):
              -30, -40, -40, -50, -50, -40, -40, -30]
 
         # mirror score tables for black
-        self.SCORES['B']['PAWN'] = self.MirrorScore(self.SCORES['W']['PAWN'])
-        self.SCORES['B']['KNIGHT'] = self.MirrorScore(self.SCORES['W']['KNIGHT'])
-        self.SCORES['B']['BISHOP'] = self.MirrorScore(self.SCORES['W']['BISHOP'])
-        self.SCORES['B']['ROOK'] = self.MirrorScore(self.SCORES['W']['ROOK'])
-        self.SCORES['B']['QUEEN'] = self.MirrorScore(self.SCORES['W']['QUEEN'])
-        self.SCORES['B']['KING'] = self.MirrorScore(self.SCORES['W']['KING'])
+        self.SCORES['B']['PAWN'] = self.mirror_score(self.SCORES['W']['PAWN'])
+        self.SCORES['B']['KNIGHT'] = self.mirror_score(self.SCORES['W']['KNIGHT'])
+        self.SCORES['B']['BISHOP'] = self.mirror_score(self.SCORES['W']['BISHOP'])
+        self.SCORES['B']['ROOK'] = self.mirror_score(self.SCORES['W']['ROOK'])
+        self.SCORES['B']['QUEEN'] = self.mirror_score(self.SCORES['W']['QUEEN'])
+        self.SCORES['B']['KING'] = self.mirror_score(self.SCORES['W']['KING'])
 
         return
 
-    def Step(self):
+    def step(self):
         # function to be implemented by children
         stats = { 'nodes_evaluated': 0, 'max_depth': 2 }
-        score, move, stats = self.Minimax(self.board, depth=0, max_depth=stats['max_depth'], isMaximizer=self.board.turn, stats=stats)
+        score, move, stats = self.minimax(self.board, depth=0, max_depth=stats['max_depth'], isMaximizer=self.board.turn, stats=stats)
         stats['predicted_score'] = score
-        print("result: move=", move, "; score=", score, "; stats=", stats)
         self.board.push(move)
         return move, self.board, stats
 
-    def Evaluate(self, board):
+    def evaluate(self, board):
         # evaluation function
         if board.is_checkmate():
             if board.turn:
@@ -125,6 +125,8 @@ class Engine(CoreEngine):
                 piece_score = 900 + self.SCORES[player]['QUEEN'][square]
             elif piece.piece_type == 6:
                 piece_score = 20000 + self.SCORES[player]['KING'][square]
+            else:
+                piece_score = 0
 
             if piece.color:
                 # white
@@ -135,11 +137,11 @@ class Engine(CoreEngine):
 
         return score
 
-    def Minimax(self, board, depth=0, max_depth=1, isMaximizer=True, stats = {}):
+    def minimax(self, board, depth=0, max_depth=1, isMaximizer=True, stats = {}):
         # when reaching a leaf node, return its evaluation
         if depth >= max_depth or board.is_game_over():
             stats['nodes_evaluated'] += 1
-            return self.Evaluate(board), None, stats
+            return self.evaluate(board), None, stats
 
         # evaluate next moves up to a certain depth
         best_move = None
@@ -149,7 +151,7 @@ class Engine(CoreEngine):
             best_score = -999999
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, not isMaximizer, stats)
+                score, _, stats = self.minimax(board, depth+1, max_depth, not isMaximizer, stats)
                 board.pop()
                 if score > best_score:
                     best_score = score
@@ -159,7 +161,7 @@ class Engine(CoreEngine):
             best_score = +999999
             for move in board.legal_moves:
                 board.push(move)
-                score, _, stats = self.Minimax(board, depth+1, max_depth, not isMaximizer, stats)
+                score, _, stats = self.minimax(board, depth+1, max_depth, not isMaximizer, stats)
                 board.pop()
                 if score < best_score:
                     best_score = score
@@ -168,7 +170,7 @@ class Engine(CoreEngine):
         # print("depth=", depth, "/", max_depth, "; best_move=", best_move, "; best_score=", best_score)
         return best_score, best_move, stats
 
-    def MirrorScore(self, scores):
+    def mirror_score(self, scores):
         return scores[56:64] \
                + scores[48:56] \
                + scores[40:48] \
@@ -178,10 +180,5 @@ class Engine(CoreEngine):
                + scores[8:16] \
                + scores[0:8]
 
-    def Copy(self):
+    def copy(self):
         return Engine()
-
-# request handler
-def handleRequest(context):
-    engine = Engine()
-    return engine.HandlePostRequest(context)
