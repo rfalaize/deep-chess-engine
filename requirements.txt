@@ -26,7 +26,7 @@ MarkupSafe==1.1.1
 numpy==1.14.5
 openapi-spec-validator==0.2.8
 pandas==0.23.3
-protobuf==3.11.3
+protobuf==3.15.0
 pyglet==1.5.0
 python-chess==0.25.0
 python-dateutil==2.8.1
