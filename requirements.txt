@@ -23,7 +23,7 @@ jsonschema==2.6.0
 kombu==4.6.7
 Markdown==3.2.1
 MarkupSafe==1.1.1
-numpy==1.14.5
+numpy==1.22.0
 openapi-spec-validator==0.2.8
 pandas==0.23.3
 protobuf==3.11.3
